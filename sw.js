@@ -1,5 +1,9 @@
-const CACHE = 'slidememo-v1';
-const FILES = ['/', '/slide-memo.html'];
+const CACHE = 'slidememo-v2';
+const FILES = [
+  '/slide-memo/slide-memo.html',
+  '/slide-memo/slides.json',
+  '/slide-memo/manifest.json'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(

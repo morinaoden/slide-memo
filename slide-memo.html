@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.json">
   <title>SlideMemo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:       #0b0e15;
@@ -21,27 +21,15 @@
       --muted:    #6a7080;
       --accent:   #d4922a;
       --accent2:  rgba(212, 146, 42, 0.12);
-      --danger:   #c0434a;
       --font-ui:  'Outfit', sans-serif;
-      --font-memo:'Outfit', sans-serif;
       --memo-size: 26px;
       --radius:   14px;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
     html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font-ui); }
 
-    /* ─── PRESENT SCREEN ─── */
-    #screen-present {
-      position: fixed; inset: 0;
-      display: flex; flex-direction: column;
-    }
-
-    /* Amber progress stripe */
-    #progress-track {
-      height: 3px;
-      background: var(--bg3);
-      flex-shrink: 0;
-    }
+    /* ─── PROGRESS ─── */
+    #progress-track { height: 3px; background: var(--bg3); flex-shrink: 0; }
     #progress-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--accent) 0%, #f0b840 100%);
@@ -49,23 +37,21 @@
       box-shadow: 0 0 8px rgba(212,146,42,0.5);
     }
 
-    /* Header */
-    #present-header {
+    /* ─── LAYOUT ─── */
+    #app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+
+    /* ─── HEADER ─── */
+    #header {
       display: flex; align-items: center; padding: 14px 18px 10px;
       flex-shrink: 0;
-      transition: opacity 0.5s, transform 0.5s;
-    }
-    #present-header.fade {
-      opacity: 0; transform: translateY(-4px); pointer-events: none;
     }
     #counter-badge {
       background: var(--accent2);
       border: 1px solid rgba(212,146,42,0.25);
       color: var(--accent);
-      font-size: 12px; font-weight: 700;
-      letter-spacing: 0.1em;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
       padding: 4px 10px; border-radius: 20px;
-      font-family: var(--font-ui);
+      flex-shrink: 0;
     }
     #header-title {
       flex: 1; text-align: center;
@@ -73,104 +59,70 @@
       padding: 0 10px;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    #header-btns { display: flex; gap: 8px; }
     .hbtn {
       width: 38px; height: 38px;
       background: var(--bg3); border: 1px solid var(--bg4);
       color: var(--muted); border-radius: 10px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
+      transition: all 0.15s; flex-shrink: 0;
     }
     .hbtn:active { background: var(--bg4); transform: scale(0.9); color: var(--accent); }
 
-    /* Notes viewport */
-    #notes-viewport {
-      flex: 1; position: relative; overflow: hidden;
+    /* ─── NOTES VIEWPORT ─── */
+    #viewport { flex: 1; position: relative; overflow: hidden; }
+
+    .panel {
+      position: absolute; inset: 0;
+      padding: 28px 28px 20px;
+      overflow-y: auto;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.32s ease, transform 0.32s cubic-bezier(.4,0,.2,1);
+    }
+    .panel.active { opacity: 1; pointer-events: none; }
+
+    .memo-text {
+      font-family: var(--font-ui);
+      font-size: var(--memo-size);
+      line-height: 1.78;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .memo-empty {
+      font-size: 14px; font-style: italic; color: var(--muted);
+      text-align: center; margin-top: 20px;
     }
 
-    /* Tap zones — split left / right, above the content layer */
+    /* ─── TAP ZONES ─── */
     #tap-zone {
       position: absolute; inset: 0;
       display: grid; grid-template-columns: 1fr 1fr;
       z-index: 20;
     }
     #tap-prev, #tap-next {
-      cursor: pointer;
-      background: none; border: none; padding: 0;
-      -webkit-appearance: none; appearance: none;
-      outline: none;
+      cursor: pointer; background: none; border: none; padding: 0;
+      -webkit-appearance: none; appearance: none; outline: none;
     }
 
-    /* Slide panels */
-    .slide-panel {
-      position: absolute; inset: 0;
-      padding: 28px 28px 20px;
-      overflow-y: auto;
-      display: flex; align-items: flex-start;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1);
-    }
-    .slide-panel.active {
-      opacity: 1; transform: none; pointer-events: none;
-    }
-    .slide-panel.enter-right { transform: translateX(40px); }
-    .slide-panel.enter-left  { transform: translateX(-40px); }
-    .slide-panel.exit-left   { opacity: 0; transform: translateX(-40px); }
-    .slide-panel.exit-right  { opacity: 0; transform: translateX(40px); }
-
-    .memo-body {
-      font-family: var(--font-memo);
-      font-size: var(--memo-size);
-      line-height: 1.78;
-      color: var(--text);
-      white-space: pre-wrap;
-      word-break: break-word;
-      width: 100%;
-    }
-    .memo-empty {
-      font-family: var(--font-ui);
-      font-size: 14px; font-style: italic;
-      color: var(--muted);
-      text-align: center; margin-top: 20px;
-    }
-
-    /* Footer nav hint */
-    #present-footer {
+    /* ─── FOOTER ─── */
+    #footer {
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 24px max(20px, env(safe-area-inset-bottom));
-      flex-shrink: 0;
-      opacity: 0.3; pointer-events: none;
+      flex-shrink: 0; opacity: 0.3; pointer-events: none;
     }
     .nav-hint { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 
-    /* Tap ripple */
-    .ripple {
-      position: fixed;
-      width: 70px; height: 70px; border-radius: 50%;
-      background: rgba(212,146,42,0.18);
-      transform: translate(-50%,-50%) scale(0);
-      animation: ripple-anim 0.45s ease-out forwards;
-      pointer-events: none; z-index: 30;
-    }
-    @keyframes ripple-anim {
-      to { transform: translate(-50%,-50%) scale(1.2); opacity: 0; }
-    }
-
     /* ─── FONT SIZE PANEL ─── */
     #overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 100;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.3s;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
     }
     #overlay.on { opacity: 1; pointer-events: auto; }
 
     #fontpanel {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--bg2);
-      border-top: 1px solid var(--bg4);
+      background: var(--bg2); border-top: 1px solid var(--bg4);
       border-radius: 20px 20px 0 0;
       padding: 24px 24px max(28px, env(safe-area-inset-bottom));
       z-index: 110;
@@ -181,8 +133,7 @@
 
     .panel-label {
       font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
-      text-transform: uppercase; color: var(--muted);
-      margin-bottom: 22px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 22px;
     }
     .fontsize-row { display: flex; align-items: center; gap: 14px; }
     .sz-btn {
@@ -200,102 +151,37 @@
     }
     .fontslider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 24px; height: 24px;
-      background: var(--accent); border-radius: 50%;
-      cursor: pointer;
-      box-shadow: 0 0 0 4px rgba(212,146,42,0.2);
+      width: 24px; height: 24px; background: var(--accent); border-radius: 50%;
+      cursor: pointer; box-shadow: 0 0 0 4px rgba(212,146,42,0.2);
     }
-    .sz-val {
-      font-size: 13px; color: var(--muted);
-      min-width: 32px; text-align: right; flex-shrink: 0;
-    }
+    .sz-val { font-size: 13px; color: var(--muted); min-width: 32px; text-align: right; flex-shrink: 0; }
 
-    /* ─── EDIT SCREEN ─── */
-    #screen-edit {
-      position: fixed; inset: 0;
-      background: var(--bg);
-      display: flex; flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.4s cubic-bezier(.4,0,.2,1);
-      z-index: 50;
-    }
-    #screen-edit.on { transform: translateX(0); }
-
-    #edit-header {
-      display: flex; align-items: center;
-      padding: 14px 18px; gap: 12px;
-      border-bottom: 1px solid var(--bg3);
-      flex-shrink: 0;
-    }
-    #edit-header h2 { font-size: 17px; font-weight: 600; flex: 1; }
-    #back-btn {
-      display: flex; align-items: center; gap: 5px;
-      background: none; border: none;
-      color: var(--accent); font-family: var(--font-ui);
-      font-size: 15px; font-weight: 500; cursor: pointer;
-      padding: 6px 2px;
-    }
-
-    #slides-list {
-      flex: 1; overflow-y: auto;
-      padding: 14px 16px;
-      display: flex; flex-direction: column; gap: 12px;
-    }
-
-    .scard {
-      background: var(--bg2);
-      border: 1px solid var(--bg3);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: border-color 0.2s;
-    }
-    .scard:focus-within { border-color: rgba(212,146,42,0.4); }
-
-    .scard-head {
-      display: flex; align-items: center;
-      padding: 11px 14px; gap: 10px;
-      border-bottom: 1px solid var(--bg3);
-    }
-    .scard-num {
-      font-size: 11px; font-weight: 700; color: var(--accent);
-      letter-spacing: 0.1em; min-width: 22px;
-    }
-    .title-input {
-      flex: 1; background: none; border: none;
-      font-family: var(--font-ui); font-size: 14px; font-weight: 500;
-      color: var(--text); outline: none;
-    }
-    .title-input::placeholder { color: var(--muted); }
-
-    .del-btn {
-      width: 28px; height: 28px; background: none; border: none;
-      color: var(--muted); border-radius: 7px; cursor: pointer;
+    /* ─── LOADING / ERROR ─── */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
+      flex-direction: column; gap: 16px; z-index: 200;
     }
-    .del-btn:active { color: var(--danger); background: rgba(192,67,74,0.12); }
-
-    .memo-input {
-      width: 100%; background: none; border: none;
-      font-family: var(--font-memo); font-size: 15px; line-height: 1.7;
-      color: var(--text); padding: 12px 14px; outline: none;
-      resize: none; min-height: 96px;
-      display: block;
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--bg4);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
-    .memo-input::placeholder { color: var(--muted); font-style: italic; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { font-size: 14px; color: var(--muted); }
 
-    #add-btn {
-      margin: 0 16px max(16px, env(safe-area-inset-bottom));
-      padding: 14px; flex-shrink: 0;
-      background: none; border: 1.5px dashed var(--bg4);
-      border-radius: var(--radius); color: var(--muted);
-      font-family: var(--font-ui); font-size: 14px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.2s;
+    /* ─── RIPPLE ─── */
+    .ripple {
+      position: fixed; width: 70px; height: 70px; border-radius: 50%;
+      background: rgba(212,146,42,0.18);
+      transform: translate(-50%,-50%) scale(0);
+      animation: ripple-anim 0.45s ease-out forwards;
+      pointer-events: none; z-index: 30;
     }
-    #add-btn:active { border-color: var(--accent); color: var(--accent); background: var(--accent2); }
+    @keyframes ripple-anim { to { transform: translate(-50%,-50%) scale(1.2); opacity: 0; } }
 
-    /* Scrollbar style */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
@@ -303,38 +189,33 @@
 </head>
 <body>
 
-<!-- ═══ PRESENT SCREEN ═══ -->
-<div id="screen-present">
+<div id="loading">
+  <div class="spinner"></div>
+  <p>読み込み中...</p>
+</div>
+
+<div id="app">
   <div id="progress-track"><div id="progress-fill"></div></div>
 
-  <div id="present-header">
+  <div id="header">
     <span id="counter-badge">1 / 1</span>
     <span id="header-title"></span>
-    <div id="header-btns">
-      <button class="hbtn" id="btn-font" aria-label="文字サイズ">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/>
-          <line x1="12" y1="4" x2="12" y2="20"/>
-        </svg>
-      </button>
-      <button class="hbtn" id="btn-edit" aria-label="編集">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/>
-        </svg>
-      </button>
-    </div>
+    <button class="hbtn" id="btn-font" aria-label="文字サイズ">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/>
+        <line x1="12" y1="4" x2="12" y2="20"/>
+      </svg>
+    </button>
   </div>
 
-  <div id="notes-viewport">
-    <!-- slide panels injected here -->
+  <div id="viewport">
     <div id="tap-zone">
       <button id="tap-prev" aria-label="前のスライド"></button>
       <button id="tap-next" aria-label="次のスライド"></button>
     </div>
   </div>
 
-  <div id="present-footer">
+  <div id="footer">
     <div class="nav-hint">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       前へ
@@ -346,7 +227,6 @@
   </div>
 </div>
 
-<!-- ═══ OVERLAY + FONT PANEL ═══ -->
 <div id="overlay"></div>
 <div id="fontpanel">
   <div class="panel-label">文字サイズ</div>
@@ -358,60 +238,26 @@
   </div>
 </div>
 
-<!-- ═══ EDIT SCREEN ═══ -->
-<div id="screen-edit">
-  <div id="edit-header">
-    <button id="back-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      戻る
-    </button>
-    <h2>スライドを編集</h2>
-  </div>
-  <div id="slides-list"></div>
-  <button id="add-btn">
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-    スライドを追加
-  </button>
-</div>
-
 <script>
-// ─── STATE ───
-const LS_SLIDES = 'slidememo_v2_slides';
-const LS_IDX   = 'slidememo_v2_idx';
-const LS_FONT  = 'slidememo_v2_font';
+const LS_IDX  = 'slidememo_idx';
+const LS_FONT = 'slidememo_font';
 
 let slides = [];
 let cur = 0;
 let fontSize = 26;
 let fontPanelOpen = false;
-let editOpen = false;
-let hideTimer = null;
 
-// ─── localStorage wrapper (file:// では使えない場合がある) ───
+// localStorage wrapper
 const store = (() => {
   try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return localStorage; }
   catch(e) {
     const m = {};
-    return { getItem: k => m[k] ?? null, setItem: (k,v) => { m[k]=v; }, removeItem: k => { delete m[k]; } };
+    return { getItem: k => m[k] ?? null, setItem: (k,v) => { m[k]=v; } };
   }
 })();
 
-// Load
-try { slides = JSON.parse(store.getItem(LS_SLIDES)) || []; } catch(e) {}
-if (!slides.length) slides = [{ title: 'スライド 1', memo: '' }];
-cur = parseInt(store.getItem(LS_IDX) || '0');
-fontSize = parseInt(store.getItem(LS_FONT) || '26');
-cur = Math.max(0, Math.min(cur, slides.length - 1));
-
-// ─── SAVE ───
-function save() {
-  try {
-    store.setItem(LS_SLIDES, JSON.stringify(slides));
-    store.setItem(LS_IDX, cur);
-    store.setItem(LS_FONT, fontSize);
-  } catch(e) {}
+function saveState() {
+  try { store.setItem(LS_IDX, cur); store.setItem(LS_FONT, fontSize); } catch(e) {}
 }
 
 // ─── FONT SIZE ───
@@ -420,40 +266,23 @@ function setFontSize(n) {
   document.documentElement.style.setProperty('--memo-size', fontSize + 'px');
   document.getElementById('fontslider').value = fontSize;
   document.getElementById('sz-val').textContent = fontSize;
-  save();
+  saveState();
 }
 
-// ─── PANELS INJECTION ───
-const viewport = document.getElementById('notes-viewport');
+// ─── BUILD PANELS ───
+const viewport = document.getElementById('viewport');
 const tapZone  = document.getElementById('tap-zone');
 
 function buildPanels() {
-  // Remove old panels
-  viewport.querySelectorAll('.slide-panel').forEach(p => p.remove());
+  viewport.querySelectorAll('.panel').forEach(p => p.remove());
   slides.forEach((slide, i) => {
     const div = document.createElement('div');
-    div.className = 'slide-panel';
-    div.dataset.i = i;
+    div.className = 'panel' + (i === cur ? ' active' : '');
     const body = document.createElement('div');
-    if (slide.memo && slide.memo.trim()) {
-      body.className = 'memo-body';
-      body.textContent = slide.memo;
-    } else {
-      body.className = 'memo-body memo-empty';
-      body.textContent = 'メモがありません';
-    }
+    body.className = slide.memo && slide.memo.trim() ? 'memo-text' : 'memo-text memo-empty';
+    body.textContent = slide.memo && slide.memo.trim() ? slide.memo : 'メモがありません';
     div.appendChild(body);
     viewport.insertBefore(div, tapZone);
-  });
-  syncActive();
-}
-
-function syncActive() {
-  const panels = viewport.querySelectorAll('.slide-panel');
-  panels.forEach((p, i) => {
-    p.classList.toggle('active', i === cur);
-    p.style.opacity = i === cur ? '1' : '0';
-    p.style.transform = '';
   });
   updateHeader();
 }
@@ -468,181 +297,56 @@ function updateHeader() {
 // ─── NAVIGATION ───
 function goTo(next) {
   if (next === cur || next < 0 || next >= slides.length) return;
+  const panels = viewport.querySelectorAll('.panel');
+  const from = panels[cur];
+  const to   = panels[next];
+  const dir  = next > cur ? 1 : -1;
 
-  const panels = viewport.querySelectorAll('.slide-panel');
-  const fromPanel = panels[cur];
-  const toPanel   = panels[next];
-  const dir = next > cur ? 1 : -1;
+  from.classList.remove('active');
+  from.style.transition = 'opacity 0.28s ease, transform 0.28s cubic-bezier(.4,0,.2,1)';
+  from.style.opacity = '0';
+  from.style.transform = `translateX(${dir < 0 ? 40 : -40}px)`;
 
-  // Animate out current
-  fromPanel.classList.remove('active');
-  fromPanel.style.transition = 'opacity 0.3s ease, transform 0.3s cubic-bezier(.4,0,.2,1)';
-  fromPanel.style.opacity = '0';
-  fromPanel.style.transform = `translateX(${dir < 0 ? 40 : -40}px)`;
+  to.style.transition = 'none';
+  to.style.opacity = '0';
+  to.style.transform = `translateX(${dir > 0 ? 40 : -40}px)`;
 
-  // Set starting position for incoming
-  toPanel.style.transition = 'none';
-  toPanel.style.opacity = '0';
-  toPanel.style.transform = `translateX(${dir > 0 ? 40 : -40}px)`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    to.style.transition = 'opacity 0.32s ease, transform 0.32s cubic-bezier(.4,0,.2,1)';
+    to.classList.add('active');
+    to.style.opacity = '1';
+    to.style.transform = 'none';
+    to.scrollTop = 0;
+  }));
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      toPanel.style.transition = 'opacity 0.35s ease, transform 0.35s cubic-bezier(.4,0,.2,1)';
-      toPanel.classList.add('active');
-      toPanel.style.opacity = '1';
-      toPanel.style.transform = 'none';
-      toPanel.scrollTop = 0;
-    });
-  });
-
-  setTimeout(() => {
-    fromPanel.style.transition = '';
-    fromPanel.style.transform = '';
-  }, 360);
+  setTimeout(() => { from.style.transition = ''; from.style.transform = ''; }, 340);
 
   cur = next;
   updateHeader();
-  save();
-  showHeader();
-}
-
-// ─── HEADER FADE ───
-function showHeader() {
-  const h = document.getElementById('present-header');
-  h.classList.remove('fade');
-  clearTimeout(hideTimer);
-}
-
-// ─── FONT PANEL ───
-function openFontPanel() {
-  fontPanelOpen = true;
-  document.getElementById('fontpanel').classList.add('on');
-  document.getElementById('overlay').classList.add('on');
-  clearTimeout(hideTimer);
-  document.getElementById('present-header').classList.remove('fade');
-}
-function closeFontPanel() {
-  fontPanelOpen = false;
-  document.getElementById('fontpanel').classList.remove('on');
-  document.getElementById('overlay').classList.remove('on');
-  showHeader();
-}
-
-document.getElementById('btn-font').addEventListener('click', openFontPanel);
-document.getElementById('overlay').addEventListener('click', closeFontPanel);
-document.getElementById('fontslider').addEventListener('input', e => setFontSize(parseInt(e.target.value)));
-document.getElementById('sz-minus').addEventListener('click', () => setFontSize(fontSize - 2));
-document.getElementById('sz-plus').addEventListener('click',  () => setFontSize(fontSize + 2));
-
-// ─── EDIT SCREEN ───
-function openEdit() {
-  editOpen = true;
-  renderEditList();
-  document.getElementById('screen-edit').classList.add('on');
-  clearTimeout(hideTimer);
-}
-function closeEdit() {
-  editOpen = false;
-  document.getElementById('screen-edit').classList.remove('on');
-  // Re-build panels after editing
-  setTimeout(() => { buildPanels(); }, 420);
-  showHeader();
-}
-
-document.getElementById('btn-edit').addEventListener('click', openEdit);
-document.getElementById('back-btn').addEventListener('click', closeEdit);
-
-function renderEditList() {
-  const list = document.getElementById('slides-list');
-  list.innerHTML = '';
-  slides.forEach((slide, i) => {
-    const card = document.createElement('div');
-    card.className = 'scard';
-    card.innerHTML = `
-      <div class="scard-head">
-        <span class="scard-num">S${i + 1}</span>
-        <input class="title-input" type="text" placeholder="スライドタイトル（任意）" value="${esc(slide.title || '')}">
-        <button class="del-btn" title="削除">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14H6L5 6"/>
-            <path d="M10 11v6M14 11v6"/>
-          </svg>
-        </button>
-      </div>
-      <textarea class="memo-input" placeholder="メモを入力…">${esc(slide.memo || '')}</textarea>
-    `;
-
-    const titleIn = card.querySelector('.title-input');
-    titleIn.addEventListener('input', () => { slides[i].title = titleIn.value; save(); });
-
-    const memoIn = card.querySelector('.memo-input');
-    memoIn.addEventListener('input', () => {
-      slides[i].memo = memoIn.value;
-      autoResize(memoIn);
-      save();
-    });
-    requestAnimationFrame(() => autoResize(memoIn));
-
-    card.querySelector('.del-btn').addEventListener('click', () => {
-      if (slides.length <= 1) { alert('最低1枚のスライドが必要です'); return; }
-      slides.splice(i, 1);
-      if (cur >= slides.length) cur = slides.length - 1;
-      save();
-      renderEditList();
-    });
-
-    list.appendChild(card);
-  });
-}
-
-function autoResize(ta) {
-  ta.style.height = 'auto';
-  ta.style.height = (ta.scrollHeight) + 'px';
-}
-
-document.getElementById('add-btn').addEventListener('click', () => {
-  slides.push({ title: `スライド ${slides.length + 1}`, memo: '' });
-  save();
-  renderEditList();
-  setTimeout(() => {
-    const list = document.getElementById('slides-list');
-    list.scrollTop = list.scrollHeight;
-    const inputs = list.querySelectorAll('.title-input');
-    if (inputs.length) inputs[inputs.length - 1].focus();
-  }, 80);
-});
-
-function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  saveState();
 }
 
 // ─── TAP / SWIPE ───
 function rippleAt(x, y) {
   const r = document.createElement('div');
   r.className = 'ripple';
-  r.style.left = x + 'px';
-  r.style.top  = y + 'px';
+  r.style.left = x + 'px'; r.style.top = y + 'px';
   document.body.appendChild(r);
   setTimeout(() => r.remove(), 460);
 }
 
-// <button> なので iOS でも確実に click が発火する
 document.getElementById('tap-prev').addEventListener('click', e => {
-  rippleAt(e.clientX, e.clientY); goTo(cur - 1); showHeader();
+  rippleAt(e.clientX, e.clientY); goTo(cur - 1);
 });
 document.getElementById('tap-next').addEventListener('click', e => {
-  rippleAt(e.clientX, e.clientY); goTo(cur + 1); showHeader();
+  rippleAt(e.clientX, e.clientY); goTo(cur + 1);
 });
 
-// 横スワイプ対応（タップと区別するため touchstart/end で距離判定）
 let ts = { x: 0, y: 0 };
-const vp = document.getElementById('notes-viewport');
-vp.addEventListener('touchstart', e => {
-  ts.x = e.touches[0].clientX;
-  ts.y = e.touches[0].clientY;
+viewport.addEventListener('touchstart', e => {
+  ts.x = e.touches[0].clientX; ts.y = e.touches[0].clientY;
 }, { passive: true });
-vp.addEventListener('touchend', e => {
+viewport.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - ts.x;
   const dy = e.changedTouches[0].clientY - ts.y;
   if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.5) {
@@ -650,23 +354,48 @@ vp.addEventListener('touchend', e => {
   }
 }, { passive: true });
 
-// ─── KEYBOARD (desktop) ───
+// ─── FONT PANEL ───
+document.getElementById('btn-font').addEventListener('click', () => {
+  fontPanelOpen = true;
+  document.getElementById('fontpanel').classList.add('on');
+  document.getElementById('overlay').classList.add('on');
+});
+document.getElementById('overlay').addEventListener('click', () => {
+  fontPanelOpen = false;
+  document.getElementById('fontpanel').classList.remove('on');
+  document.getElementById('overlay').classList.remove('on');
+});
+document.getElementById('fontslider').addEventListener('input', e => setFontSize(parseInt(e.target.value)));
+document.getElementById('sz-minus').addEventListener('click', () => setFontSize(fontSize - 2));
+document.getElementById('sz-plus').addEventListener('click',  () => setFontSize(fontSize + 2));
+
+// ─── KEYBOARD ───
 document.addEventListener('keydown', e => {
-  if (editOpen || fontPanelOpen) return;
+  if (fontPanelOpen) return;
   if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); goTo(cur + 1); }
   if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  { e.preventDefault(); goTo(cur - 1); }
-  if (e.key === 'e') openEdit();
-  if (e.key === 'Escape') closeFontPanel();
+  if (e.key === 'Escape') document.getElementById('overlay').click();
 });
 
-// ─── INIT ───
-setFontSize(fontSize);
-buildPanels();
-showHeader();
+// ─── LOAD slides.json ───
+fetch('slides.json?v=' + Date.now())
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(data => {
+    slides = data;
+    cur = Math.max(0, Math.min(parseInt(store.getItem(LS_IDX) || '0'), slides.length - 1));
+    fontSize = parseInt(store.getItem(LS_FONT) || '26');
+    setFontSize(fontSize);
+    buildPanels();
+    document.getElementById('loading').style.display = 'none';
+  })
+  .catch(() => {
+    document.getElementById('loading').innerHTML =
+      '<p style="color:#c0434a;padding:24px;text-align:center">slides.json の読み込みに失敗しました</p>';
+  });
 
-// ─── SERVICE WORKER 登録 ───
+// ─── SERVICE WORKER ───
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.register('/slide-memo/sw.js').catch(() => {});
 }
 </script>
 </body>
