@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --version)",
+      "Bash(make --version)",
+      "Bash(gcc --version)",
+      "Bash(cl)",
+      "Bash(wsl --list --verbose)",
+      "Bash(wsl -l -v)",
+      "Bash(wsl bash:*)",
+      "Bash(ls E:/claude/*.html E:/claude/*.js E:/claude/*.json)",
+      "Bash(git --version)",
+      "Bash(gh --version)"
+    ]
+  }
+}
