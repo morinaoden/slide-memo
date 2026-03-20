@@ -23,7 +23,7 @@
       --accent2:  rgba(212, 146, 42, 0.12);
       --danger:   #c0434a;
       --font-ui:  'Outfit', sans-serif;
-      --font-memo:'Lora', serif;
+      --font-memo:'Outfit', sans-serif;
       --memo-size: 26px;
       --radius:   14px;
     }
@@ -511,9 +511,6 @@ function showHeader() {
   const h = document.getElementById('present-header');
   h.classList.remove('fade');
   clearTimeout(hideTimer);
-  if (!fontPanelOpen && !editOpen) {
-    hideTimer = setTimeout(() => h.classList.add('fade'), 3200);
-  }
 }
 
 // ─── FONT PANEL ───
