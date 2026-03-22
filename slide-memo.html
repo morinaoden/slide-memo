@@ -26,7 +26,7 @@
       --radius:   14px;
     }
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font-ui); }
+    html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--font-ui); }
 
     /* ─── PROGRESS ─── */
     #progress-track { height: 3px; background: var(--bg3); flex-shrink: 0; }
@@ -69,13 +69,14 @@
     .hbtn:active { background: var(--bg4); transform: scale(0.9); color: var(--accent); }
 
     /* ─── NOTES VIEWPORT ─── */
-    #viewport { flex: 1; position: relative; overflow: hidden; }
+    #viewport { flex: 1; position: relative; overflow: clip; }
 
     .panel {
       position: absolute; inset: 0;
       padding: 28px 28px 20px;
-      overflow-y: auto;
+      overflow-y: scroll;
       -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.32s ease, transform 0.32s cubic-bezier(.4,0,.2,1);
