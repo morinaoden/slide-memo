@@ -2,7 +2,7 @@
   "name": "SlideMemo",
   "short_name": "SlideMemo",
   "description": "プレゼン用スライドメモアプリ",
-  "start_url": "/slide-memo.html",
+  "start_url": "/slide-memo/slide-memo.html",
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0b0e15",
