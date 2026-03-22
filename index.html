@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SlideMemo">
+  <meta name="theme-color" content="#0b0e15">
+  <link rel="manifest" href="manifest.json">
+  <title>SlideMemo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #0b0e15;
+      --bg2:      #12161f;
+      --bg3:      #1c2130;
+      --bg4:      #252d3d;
+      --text:     #eee5cc;
+      --muted:    #6a7080;
+      --accent:   #d4922a;
+      --accent2:  rgba(212, 146, 42, 0.12);
+      --font-ui:  'Outfit', sans-serif;
+      --memo-size: 26px;
+      --radius:   14px;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--font-ui); overscroll-behavior: none; }
+
+    /* ─── PROGRESS ─── */
+    #progress-track { height: 3px; background: var(--bg3); flex-shrink: 0; }
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, #f0b840 100%);
+      transition: width 0.45s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 8px rgba(212,146,42,0.5);
+    }
+
+    /* ─── LAYOUT ─── */
+    #app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+
+    /* ─── HEADER ─── */
+    #header {
+      display: flex; align-items: center; padding: 14px 18px 10px;
+      flex-shrink: 0;
+    }
+    #counter-badge {
+      background: var(--accent2);
+      border: 1px solid rgba(212,146,42,0.25);
+      color: var(--accent);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+      padding: 4px 10px; border-radius: 20px;
+      flex-shrink: 0;
+    }
+    #header-title {
+      flex: 1; text-align: center;
+      font-size: 13px; color: var(--muted);
+      padding: 0 10px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .hbtn {
+      width: 38px; height: 38px;
+      background: var(--bg3); border: 1px solid var(--bg4);
+      color: var(--muted); border-radius: 10px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .hbtn:active { background: var(--bg4); transform: scale(0.9); color: var(--accent); }
+
+    /* ─── NOTES VIEWPORT ─── */
+    #viewport { flex: 1; position: relative; overflow: clip; }
+
+    .panel {
+      position: absolute; inset: 0;
+      padding: 28px 28px 20px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.32s ease, transform 0.32s cubic-bezier(.4,0,.2,1);
+    }
+    .panel.active { opacity: 1; pointer-events: none; }
+
+    .memo-text {
+      font-family: var(--font-ui);
+      font-size: var(--memo-size);
+      line-height: 1.78;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .memo-empty {
+      font-size: 14px; font-style: italic; color: var(--muted);
+      text-align: center; margin-top: 20px;
+    }
+
+    /* ─── FOOTER ─── */
+    #footer {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+      padding: 10px 16px max(16px, env(safe-area-inset-bottom));
+      flex-shrink: 0;
+      border-top: 1px solid var(--bg3);
+    }
+    .nav-btn {
+      flex: 1; height: 52px;
+      background: var(--bg3); border: 1px solid var(--bg4);
+      color: var(--text); border-radius: var(--radius);
+      font-family: var(--font-ui); font-size: 15px; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.15s; -webkit-appearance: none; appearance: none;
+    }
+    .nav-btn:active { background: var(--accent2); border-color: var(--accent); transform: scale(0.97); }
+    .nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+
+    /* ─── FONT SIZE PANEL ─── */
+    #overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    #overlay.on { opacity: 1; pointer-events: auto; }
+
+    #fontpanel {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg2); border-top: 1px solid var(--bg4);
+      border-radius: 20px 20px 0 0;
+      padding: 24px 24px max(28px, env(safe-area-inset-bottom));
+      z-index: 110;
+      transform: translateY(100%);
+      transition: transform 0.38s cubic-bezier(.4,0,.2,1);
+    }
+    #fontpanel.on { transform: translateY(0); }
+
+    .panel-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 22px;
+    }
+    .fontsize-row { display: flex; align-items: center; gap: 14px; }
+    .sz-btn {
+      width: 46px; height: 46px;
+      background: var(--bg3); border: 1px solid var(--bg4);
+      color: var(--text); border-radius: 12px;
+      font-size: 24px; font-weight: 300;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.15s;
+    }
+    .sz-btn:active { background: var(--accent2); border-color: var(--accent); transform: scale(0.9); }
+    .fontslider {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; background: var(--bg4); border-radius: 2px; outline: none;
+    }
+    .fontslider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px; height: 24px; background: var(--accent); border-radius: 50%;
+      cursor: pointer; box-shadow: 0 0 0 4px rgba(212,146,42,0.2);
+    }
+    .sz-val { font-size: 13px; color: var(--muted); min-width: 32px; text-align: right; flex-shrink: 0; }
+
+    /* ─── LOADING / ERROR ─── */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; z-index: 200;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--bg4);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { font-size: 14px; color: var(--muted); }
+
+    /* ─── RIPPLE ─── */
+    .ripple {
+      position: fixed; width: 70px; height: 70px; border-radius: 50%;
+      background: rgba(212,146,42,0.18);
+      transform: translate(-50%,-50%) scale(0);
+      animation: ripple-anim 0.45s ease-out forwards;
+      pointer-events: none; z-index: 30;
+    }
+    @keyframes ripple-anim { to { transform: translate(-50%,-50%) scale(1.2); opacity: 0; } }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>読み込み中...</p>
+</div>
+
+<div id="app">
+  <div id="progress-track"><div id="progress-fill"></div></div>
+
+  <div id="header">
+    <span id="counter-badge">1 / 1</span>
+    <span id="header-title"></span>
+    <button class="hbtn" id="btn-font" aria-label="文字サイズ">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/>
+        <line x1="12" y1="4" x2="12" y2="20"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="viewport"></div>
+
+  <div id="footer">
+    <button class="nav-btn" id="btn-prev">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      前へ
+    </button>
+    <button class="nav-btn" id="btn-next">
+      次へ
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="overlay"></div>
+<div id="fontpanel">
+  <div class="panel-label">文字サイズ</div>
+  <div class="fontsize-row">
+    <button class="sz-btn" id="sz-minus">−</button>
+    <input type="range" class="fontslider" id="fontslider" min="14" max="56" step="2" value="26">
+    <button class="sz-btn" id="sz-plus">＋</button>
+    <span class="sz-val" id="sz-val">26</span>
+  </div>
+</div>
+
+<script>
+const LS_IDX  = 'slidememo_idx';
+const LS_FONT = 'slidememo_font';
+
+let slides = [];
+let rawCount = 0;
+let cur = 0;
+let fontSize = 26;
+let fontPanelOpen = false;
+
+// localStorage wrapper
+const store = (() => {
+  try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return localStorage; }
+  catch(e) {
+    const m = {};
+    return { getItem: k => m[k] ?? null, setItem: (k,v) => { m[k]=v; } };
+  }
+})();
+
+function saveState() {
+  try { store.setItem(LS_IDX, cur); store.setItem(LS_FONT, fontSize); } catch(e) {}
+}
+
+// ─── FONT SIZE ───
+function setFontSize(n) {
+  fontSize = Math.max(14, Math.min(56, n));
+  document.documentElement.style.setProperty('--memo-size', fontSize + 'px');
+  document.getElementById('fontslider').value = fontSize;
+  document.getElementById('sz-val').textContent = fontSize;
+  saveState();
+}
+
+// ─── BUILD PANELS ───
+const viewport = document.getElementById('viewport');
+
+function buildPanels() {
+  viewport.querySelectorAll('.panel').forEach(p => p.remove());
+  slides.forEach((slide, i) => {
+    const div = document.createElement('div');
+    div.className = 'panel' + (i === cur ? ' active' : '');
+    const body = document.createElement('div');
+    body.className = slide.memo && slide.memo.trim() ? 'memo-text' : 'memo-text memo-empty';
+    body.textContent = slide.memo && slide.memo.trim() ? slide.memo : 'メモがありません';
+    div.appendChild(body);
+    viewport.appendChild(div);
+  });
+  updateHeader();
+}
+
+function updateHeader() {
+  const slideNum = slides[cur]?.slideIdx || (cur + 1);
+  const total = rawCount || slides.length;
+  document.getElementById('counter-badge').textContent = `${slideNum} / ${total}`;
+  document.getElementById('header-title').textContent = slides[cur]?.title || '';
+  const pct = slides.length > 1 ? (cur / (slides.length - 1)) * 100 : 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('btn-prev').disabled = cur === 0;
+  document.getElementById('btn-next').disabled = cur === slides.length - 1;
+}
+
+// ─── AUTO SPLIT ───
+function splitSlides(rawSlides) {
+  rawCount = rawSlides.length;
+  const m = document.createElement('div');
+  m.style.cssText = `position:fixed;top:-9999px;left:0;width:${window.innerWidth}px;` +
+    `padding:28px 28px 20px;font-family:'Outfit',sans-serif;font-size:${fontSize}px;` +
+    `line-height:1.78;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;visibility:hidden;`;
+  document.body.appendChild(m);
+  const availH = document.getElementById('viewport').offsetHeight;
+  const result = [];
+  rawSlides.forEach((slide, idx) => {
+    const lines = (slide.memo || '').split('\n');
+    let current = [];
+    for (const line of lines) {
+      const test = [...current, line];
+      m.textContent = test.join('\n');
+      if (m.offsetHeight > availH && current.length > 0) {
+        result.push({ title: slide.title, memo: current.join('\n'), slideIdx: idx + 1 });
+        current = [line];
+      } else {
+        current = test;
+      }
+    }
+    result.push({ title: slide.title, memo: current.join('\n'), slideIdx: idx + 1 });
+  });
+  document.body.removeChild(m);
+  return result;
+}
+
+// ─── NAVIGATION ───
+function goTo(next) {
+  if (next === cur || next < 0 || next >= slides.length) return;
+  const panels = viewport.querySelectorAll('.panel');
+  const from = panels[cur];
+  const to   = panels[next];
+  const dir  = next > cur ? 1 : -1;
+
+  from.classList.remove('active');
+  from.style.transition = 'opacity 0.28s ease, transform 0.28s cubic-bezier(.4,0,.2,1)';
+  from.style.opacity = '0';
+  from.style.transform = `translateX(${dir < 0 ? 40 : -40}px)`;
+
+  to.style.transition = 'none';
+  to.style.opacity = '0';
+  to.style.transform = `translateX(${dir > 0 ? 40 : -40}px)`;
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    to.style.transition = 'opacity 0.32s ease, transform 0.32s cubic-bezier(.4,0,.2,1)';
+    to.classList.add('active');
+    to.style.opacity = '1';
+    to.style.transform = 'none';
+    to.scrollTop = 0;
+  }));
+
+  setTimeout(() => { from.style.transition = ''; from.style.transform = ''; }, 340);
+
+  cur = next;
+  updateHeader();
+  saveState();
+}
+
+// ─── NAV BUTTONS ───
+document.getElementById('btn-prev').addEventListener('click', () => goTo(cur - 1));
+document.getElementById('btn-next').addEventListener('click', () => goTo(cur + 1));
+
+// ─── SWIPE (horizontal only) ───
+let ts = { x: 0, y: 0 };
+viewport.addEventListener('touchstart', e => {
+  ts.x = e.touches[0].clientX; ts.y = e.touches[0].clientY;
+}, { passive: true });
+viewport.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - ts.x;
+  const dy = e.changedTouches[0].clientY - ts.y;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2) {
+    dx < 0 ? goTo(cur + 1) : goTo(cur - 1);
+  }
+}, { passive: true });
+
+// ─── FONT PANEL ───
+document.getElementById('btn-font').addEventListener('click', () => {
+  fontPanelOpen = true;
+  document.getElementById('fontpanel').classList.add('on');
+  document.getElementById('overlay').classList.add('on');
+});
+document.getElementById('overlay').addEventListener('click', () => {
+  fontPanelOpen = false;
+  document.getElementById('fontpanel').classList.remove('on');
+  document.getElementById('overlay').classList.remove('on');
+});
+document.getElementById('fontslider').addEventListener('input', e => setFontSize(parseInt(e.target.value)));
+document.getElementById('sz-minus').addEventListener('click', () => setFontSize(fontSize - 2));
+document.getElementById('sz-plus').addEventListener('click',  () => setFontSize(fontSize + 2));
+
+// ─── KEYBOARD ───
+document.addEventListener('keydown', e => {
+  if (fontPanelOpen) return;
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); goTo(cur + 1); }
+  if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  { e.preventDefault(); goTo(cur - 1); }
+  if (e.key === 'Escape') document.getElementById('overlay').click();
+});
+
+// ─── LOAD slides.json ───
+fetch('slides.json?v=' + Date.now())
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(data => {
+    fontSize = parseInt(store.getItem(LS_FONT) || '26');
+    setFontSize(fontSize);
+    requestAnimationFrame(() => {
+      slides = splitSlides(data);
+      cur = Math.max(0, Math.min(parseInt(store.getItem(LS_IDX) || '0'), slides.length - 1));
+      buildPanels();
+      document.getElementById('loading').style.display = 'none';
+    });
+  })
+  .catch(() => {
+    document.getElementById('loading').innerHTML =
+      '<p style="color:#c0434a;padding:24px;text-align:center">slides.json の読み込みに失敗しました</p>';
+  });
+
+// ─── SERVICE WORKER ───
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/slide-memo/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
