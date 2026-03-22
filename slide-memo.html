@@ -74,14 +74,12 @@
     .panel {
       position: absolute; inset: 0;
       padding: 28px 28px 20px;
-      overflow-y: scroll;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
+      overflow: hidden;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.32s ease, transform 0.32s cubic-bezier(.4,0,.2,1);
     }
-    .panel.active { opacity: 1; pointer-events: auto; }
+    .panel.active { opacity: 1; pointer-events: none; }
 
     .memo-text {
       font-family: var(--font-ui);
