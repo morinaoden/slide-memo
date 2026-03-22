@@ -238,6 +238,7 @@ const LS_IDX  = 'slidememo_idx';
 const LS_FONT = 'slidememo_font';
 
 let slides = [];
+let rawCount = 0;
 let cur = 0;
 let fontSize = 26;
 let fontPanelOpen = false;
@@ -282,12 +283,43 @@ function buildPanels() {
 }
 
 function updateHeader() {
-  document.getElementById('counter-badge').textContent = `${cur + 1} / ${slides.length}`;
+  const slideNum = slides[cur]?.slideIdx || (cur + 1);
+  const total = rawCount || slides.length;
+  document.getElementById('counter-badge').textContent = `${slideNum} / ${total}`;
   document.getElementById('header-title').textContent = slides[cur]?.title || '';
   const pct = slides.length > 1 ? (cur / (slides.length - 1)) * 100 : 100;
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('btn-prev').disabled = cur === 0;
   document.getElementById('btn-next').disabled = cur === slides.length - 1;
+}
+
+// ─── AUTO SPLIT ───
+function splitSlides(rawSlides) {
+  rawCount = rawSlides.length;
+  const m = document.createElement('div');
+  m.style.cssText = `position:fixed;top:-9999px;left:0;width:${window.innerWidth}px;` +
+    `padding:28px 28px 20px;font-family:'Outfit',sans-serif;font-size:${fontSize}px;` +
+    `line-height:1.78;white-space:pre-wrap;word-break:break-word;box-sizing:border-box;visibility:hidden;`;
+  document.body.appendChild(m);
+  const availH = document.getElementById('viewport').offsetHeight;
+  const result = [];
+  rawSlides.forEach((slide, idx) => {
+    const lines = (slide.memo || '').split('\n');
+    let current = [];
+    for (const line of lines) {
+      const test = [...current, line];
+      m.textContent = test.join('\n');
+      if (m.offsetHeight > availH && current.length > 0) {
+        result.push({ title: slide.title, memo: current.join('\n'), slideIdx: idx + 1 });
+        current = [line];
+      } else {
+        current = test;
+      }
+    }
+    result.push({ title: slide.title, memo: current.join('\n'), slideIdx: idx + 1 });
+  });
+  document.body.removeChild(m);
+  return result;
 }
 
 // ─── NAVIGATION ───
@@ -366,12 +398,14 @@ document.addEventListener('keydown', e => {
 fetch('slides.json?v=' + Date.now())
   .then(r => { if (!r.ok) throw new Error(); return r.json(); })
   .then(data => {
-    slides = data;
-    cur = Math.max(0, Math.min(parseInt(store.getItem(LS_IDX) || '0'), slides.length - 1));
     fontSize = parseInt(store.getItem(LS_FONT) || '26');
     setFontSize(fontSize);
-    buildPanels();
-    document.getElementById('loading').style.display = 'none';
+    requestAnimationFrame(() => {
+      slides = splitSlides(data);
+      cur = Math.max(0, Math.min(parseInt(store.getItem(LS_IDX) || '0'), slides.length - 1));
+      buildPanels();
+      document.getElementById('loading').style.display = 'none';
+    });
   })
   .catch(() => {
     document.getElementById('loading').innerHTML =

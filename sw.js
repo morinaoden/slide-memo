@@ -1,4 +1,4 @@
-const CACHE = 'slidememo-v3';
+const CACHE = 'slidememo-v4';
 const FILES = [
   '/slide-memo/slide-memo.html',
   '/slide-memo/slides.json',
