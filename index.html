@@ -95,20 +95,13 @@
     }
 
     /* ─── FOOTER ─── */
-    #footer {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 12px;
-      padding: 10px 16px max(16px, env(safe-area-inset-bottom));
-      flex-shrink: 0;
-      border-top: 1px solid var(--bg3);
-    }
     .nav-btn {
-      flex: 1; height: 52px;
+      height: 38px; padding: 0 12px;
       background: var(--bg3); border: 1px solid var(--bg4);
-      color: var(--text); border-radius: var(--radius);
-      font-family: var(--font-ui); font-size: 15px; font-weight: 500;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: all 0.15s; -webkit-appearance: none; appearance: none;
+      color: var(--text); border-radius: 10px;
+      font-family: var(--font-ui); font-size: 14px; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.15s; -webkit-appearance: none; appearance: none; flex-shrink: 0;
     }
     .nav-btn:active { background: var(--accent2); border-color: var(--accent); transform: scale(0.97); }
     .nav-btn:disabled { opacity: 0.25; pointer-events: none; }
@@ -198,6 +191,10 @@
   <div id="progress-track"><div id="progress-fill"></div></div>
 
   <div id="header">
+    <button class="nav-btn" id="btn-prev">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      前へ
+    </button>
     <span id="counter-badge">1 / 1</span>
     <span id="header-title"></span>
     <button class="hbtn" id="btn-font" aria-label="文字サイズ">
@@ -206,20 +203,13 @@
         <line x1="12" y1="4" x2="12" y2="20"/>
       </svg>
     </button>
-  </div>
-
-  <div id="viewport"></div>
-
-  <div id="footer">
-    <button class="nav-btn" id="btn-prev">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      前へ
-    </button>
     <button class="nav-btn" id="btn-next">
       次へ
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
+
+  <div id="viewport"></div>
 </div>
 
 <div id="overlay"></div>
