@@ -384,12 +384,6 @@
     </div>
 
     <div id="header">
-      <button class="nav-btn" id="btn-prev">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        前へ
-      </button>
       <span id="header-title"></span>
       <button class="nav-btn" id="btn-next">
         次へ
@@ -480,7 +474,6 @@
       document.getElementById('header-title').textContent = slides[cur]?.title || '';
       const pct = slides.length > 1 ? (cur / (slides.length - 1)) * 100 : 100;
       document.getElementById('progress-fill').style.width = pct + '%';
-      document.getElementById('btn-prev').disabled = cur === 0;
       document.getElementById('btn-next').disabled = cur === slides.length - 1;
     }
 
@@ -546,7 +539,6 @@
     }
 
     // ─── NAV BUTTONS ───
-    document.getElementById('btn-prev').addEventListener('click', () => goTo(cur - 1));
     document.getElementById('btn-next').addEventListener('click', () => goTo(cur + 1));
 
     // ─── SWIPE (horizontal only) ───
