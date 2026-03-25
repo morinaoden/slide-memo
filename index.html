@@ -71,33 +71,34 @@
     #header {
       display: flex;
       align-items: center;
-      padding: 14px 18px 10px;
-      gap: 10px;
+      padding: 10px 12px 8px;
+      gap: 8px;
       flex-shrink: 0;
+      border-bottom: 1px solid var(--bg3);
+    }
+
+    #header-title {
+      flex: 1;
+      text-align: center;
+      font-size: 14px;
+      color: #ffffff;
+      font-weight: 700;
+      padding: 0 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     #counter-badge {
       background: var(--accent2);
       border: 1px solid rgba(212, 146, 42, 0.25);
       color: var(--accent);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.1em;
-      padding: 4px 10px;
+      letter-spacing: 0.05em;
+      padding: 6px 18px;
       border-radius: 20px;
-      flex-shrink: 0;
-    }
-
-    #header-title {
-      flex: 1;
       text-align: center;
-      font-size: 17px;
-      color: #ffffff;
-      font-weight: 700;
-      padding: 0 10px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     .hbtn {
@@ -163,32 +164,32 @@
     /* ─── FOOTER ─── */
     #footer {
       display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 10px;
-      padding: 10px 18px max(18px, env(safe-area-inset-bottom));
+      padding: 10px 18px max(14px, env(safe-area-inset-bottom));
       flex-shrink: 0;
+      border-top: 1px solid var(--bg3);
     }
 
     .nav-btn {
       flex: 1;
-      height: 56px;
-      padding: 0 16px;
+      height: 46px;
+      padding: 0 12px;
       background: var(--bg3);
       border: 1px solid var(--bg4);
       color: var(--text);
-      border-radius: 14px;
+      border-radius: 12px;
       font-family: var(--font-ui);
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.15s;
       -webkit-appearance: none;
       appearance: none;
-      flex-shrink: 0;
     }
 
     .nav-btn:active {
@@ -383,19 +384,24 @@
     </div>
 
     <div id="header">
-      <span id="counter-badge">1 / 1</span>
-      <span id="header-title"></span>
-    </div>
-
-    <div id="viewport"></div>
-
-    <div id="footer">
       <button class="nav-btn" id="btn-prev">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="15 18 9 12 15 6" />
         </svg>
         前へ
       </button>
+      <span id="header-title"></span>
+      <button class="nav-btn" id="btn-next">
+        次へ
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+    </div>
+
+    <div id="viewport"></div>
+
+    <div id="footer">
       <button class="hbtn" id="btn-font" aria-label="文字サイズ">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="4 7 4 4 20 4 20 7" />
@@ -403,12 +409,7 @@
           <line x1="12" y1="4" x2="12" y2="20" />
         </svg>
       </button>
-      <button class="nav-btn" id="btn-next">
-        次へ
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
+      <span id="counter-badge">1 / 1</span>
     </div>
   </div>
 
