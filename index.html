@@ -71,6 +71,7 @@
     #header {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       padding: 10px 12px 8px;
       gap: 8px;
       flex-shrink: 0;
@@ -80,10 +81,10 @@
     #header-title {
       flex: 1;
       text-align: center;
-      font-size: 14px;
+      font-size: 13px;
       color: #ffffff;
       font-weight: 700;
-      padding: 0 4px;
+      padding: 0 8px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -164,8 +165,9 @@
     /* ─── FOOTER ─── */
     #footer {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
+      gap: 10px;
       padding: 10px 18px max(14px, env(safe-area-inset-bottom));
       flex-shrink: 0;
       border-top: 1px solid var(--bg3);
@@ -384,7 +386,6 @@
     </div>
 
     <div id="header">
-      <span id="header-title"></span>
       <button class="nav-btn" id="btn-next">
         次へ
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -403,6 +404,7 @@
           <line x1="12" y1="4" x2="12" y2="20" />
         </svg>
       </button>
+      <span id="header-title"></span>
       <span id="counter-badge">1 / 1</span>
     </div>
   </div>
