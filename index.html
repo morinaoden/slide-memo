@@ -18,7 +18,7 @@
       --bg2: #12161f;
       --bg3: #1c2130;
       --bg4: #252d3d;
-      --text: #eee5cc;
+      --text: #ffffff;
       --muted: #6a7080;
       --accent: #d4922a;
       --accent2: rgba(212, 146, 42, 0.12);
@@ -454,14 +454,24 @@
     // ─── BUILD PANELS ───
     const viewport = document.getElementById('viewport');
 
+    function formatMemo(text) {
+      const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
+
     function buildPanels() {
       viewport.querySelectorAll('.panel').forEach(p => p.remove());
       slides.forEach((slide, i) => {
         const div = document.createElement('div');
         div.className = 'panel' + (i === cur ? ' active' : '');
         const body = document.createElement('div');
-        body.className = slide.memo && slide.memo.trim() ? 'memo-text' : 'memo-text memo-empty';
-        body.textContent = slide.memo && slide.memo.trim() ? slide.memo : 'メモがありません';
+        const hasMemo = slide.memo && slide.memo.trim();
+        body.className = hasMemo ? 'memo-text' : 'memo-text memo-empty';
+        if (hasMemo) {
+          body.innerHTML = formatMemo(slide.memo);
+        } else {
+          body.textContent = 'メモがありません';
+        }
         div.appendChild(body);
         viewport.appendChild(div);
       });
